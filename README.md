@@ -126,9 +126,10 @@ Verify your contract on https://alfajores.celoscan.io
 Create a new file in the root of your project directory called .env. This file will contain your Celo network and contract information. Add the following lines to it
 
 CELO_NETWORK=https://alfajores-forno.celo-testnet.org
-TOUCAN_WRAPPER_ADDRESS=<your-ToucanProtocolWrapper-contract-address>
 
-Using a smart contract wrapper
+TOUCAN_WRAPPER_ADDRESS=your-ToucanProtocolWrapper-contract-address
+
+**Using a smart contract wrapper**
     
 Create a new file in your project directory called ToucanProtocolWrapper.js
     
