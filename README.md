@@ -340,7 +340,7 @@ Here is what you should expect to see with a footprint of 0 initially. In this c
     
 ![](https://i.imgur.com/vk80SPw.png)
 
-You can proceed to test the application by entering a value in the "Purchase Amount" field and clicking the "Purchase" button. This should send a transaction to the Toucan Protocol contract and update the "Carbon Footprint" field with the calculated carbon footprint.
+You can proceed to test the application by entering a value in the "Purchase Amount" field and clicking the "Purchase" button. This should send a transaction to the Toucan Protocol contract and update the "Carbon Footprint" field with the calculated carbon footprint. Make sure to have funds in your Celo testnet wallet. If you don't have a Celo Wallet, you can add it to your Metamask [here](https://docs.celo.org/blog/tutorials/3-simple-steps-to-connect-your-metamask-wallet-to-celo) or add the Celo wallet plugin to your browser.
     
 Congratulations you have just created a dApp using Toucan Protocol and Celo Composer. :confetti_ball: :confetti_ball: 
     
