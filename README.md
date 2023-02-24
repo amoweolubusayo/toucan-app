@@ -3,6 +3,7 @@
 The Toucan Protocol is a decentralized platform that enables businesses and individuals to offset their carbon footprint by purchasing carbon credits from verified environmental projects. In this tutorial, we will build a dApp that interacts with the Toucan Protocol's carbon credits smart contract using Celo Composer, a development tool that streamlines the creation and deployment of Celo blockchain applications. This app can serve as an incentive and facilitate the transition to a low-carbon economy by making it easy and accessible for individuals and organizations to offset their carbon footprint through the purchase and redemption of carbon credits.
 
 **Prerequisites**
+
 Before starting this tutorial, make sure you have the following installed on your machine:
 
 * Node.js
