@@ -1,14 +1,11 @@
-// import CarbonCredits from '../components/CarbonCredits';
-
 import React from "react";
 import ReactDOM from "react-dom";
-import CarbonCredits from "../components/CarbonCredits";
-
+import CarbonOffsets from "../components/CarbonOffsets";
 
 export default function Home(): JSX.Element {
   return (
     <div>
-      <CarbonCredits />
+      <CarbonOffsets />
     </div>
   );
 }

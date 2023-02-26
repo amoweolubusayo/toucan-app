@@ -4,10 +4,18 @@ const nextConfig = {
   swcMinify: true,
   webpack: (config) => {
     config.resolve.fallback = {
-      fs: false
-    }
-    return config
-  }
-}
+      fs: false,
+    };
+    return config;
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "https://api.example.com/:path*",
+      },
+    ];
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

@@ -6,7 +6,7 @@ const { ContractKit } = require("@celo/contractkit");
 require("dotenv").config();
 
 async function getContract() {
-  const contractAddress = process.env.TOUCAN_WRAPPER_ADDRESS;
+  const contractAddress = "0xE5738DaDd196816365dCDc92B12E329acC9bcba4";
   const contractABI = toucanProtocolABI.abi;
   let toucanContract;
   try {
