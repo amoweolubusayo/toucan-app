@@ -1,6 +1,6 @@
 **Introduction**
 
-The Toucan Protocol is a decentralized platform that enables businesses and individuals to offset their carbon footprint by purchasing carbon credits from verified environmental projects. You can learn more about Toucan here https://toucan.earth/. In this tutorial, we will build a dApp that interacts with the Toucan Protocol's carbon credits smart contract using Celo Composer. Celo Composer is a tool that streamlines the creation and deployment of Celo blockchain applications. Our dApp can serve as an incentive and facilitate the transition to a low-carbon economy by making it easy and accessible for individuals and organizations to offset their carbon footprint through the purchase and redemption of carbon credits.
+The Toucan Protocol is a decentralized platform that enables businesses and individuals to offset their carbon footprint by purchasing carbon credits from verified environmental projects. You can learn more about Toucan here https://toucan.earth/. In this tutorial, we will build a dApp(carbon offset marketplace) that interacts with the Toucan Protocol's carbon credits smart contract using Celo Composer. Celo Composer is a tool that streamlines the creation and deployment of Celo blockchain applications.
 
 **Prerequisites**
 
@@ -25,328 +25,212 @@ You will also be prompted to pick a web3 library for the react app. In this tuto
 
 Next up, you will be prompted to choose the smart contract framework, we will be using hardhat in this tutorial.
 
-Finally, you will be asked if you want to create a subgraph, we don't need one so we can select no
+Finally, you will be asked if you want to create a subgraph, we don't need to create one so we can select no. However, we will be interacting with Toucan Protocol's contract via a subgraph
 
 
 ![](https://i.imgur.com/PZpdeEM.png)
 
 Pick your project name as well
 
+
 ![](https://i.imgur.com/HqBAp5R.png)
 
-**Writing and deploying our contract**
-
-Now that our project has been created, we need to check out the hardhat folder and navigate to contracts folder and create a new solidity file named ToucanProtocol.sol
-
-In this file, our smart contract will look like this
-
-```solidity
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract ToucanProtocol {
-    uint256 public carbonCreditsPerTon;
-    uint256 public creditPrice;
-    uint256 public totalSupply;
-
-    event CreditsPurchased(address indexed buyer, uint256 credits);
-
-    constructor(uint256 _carbonCreditsPerTon, uint256 _creditPrice) {
-        carbonCreditsPerTon = _carbonCreditsPerTon;
-        creditPrice = _creditPrice;
-    }
-
-    function setCarbonCreditsPerTon(uint256 _carbonCreditsPerTon) public {
-        carbonCreditsPerTon = _carbonCreditsPerTon;
-    }
-
-    function setCreditPrice(uint256 _creditPrice) public {
-        creditPrice = _creditPrice;
-    }
-
-    function purchaseCarbonCredits(uint256 _tonnes) public payable {
-        require(msg.value == _tonnes * creditPrice, "Incorrect payment amount");
-        uint256 credits = _tonnes * carbonCreditsPerTon;
-        uint256 newSupply = totalSupply + credits;
-        require(newSupply >= totalSupply, "Integer overflow");
-        totalSupply = newSupply;
-        emit CreditsPurchased(msg.sender, credits);
-    }
-}
-
-
-```
-
-The purchaseCarbonCredits function allows users to purchase carbon credits by sending ether to the contract. The tonnes parameter specifies the number of tonnes of carbon offset that the user wants to purchase. The function is marked as payable to allow ether to be sent to the contract.
-
-
-
-Compile the contract by running the following command in the terminal
-
-```bash
-cd hardhat/contracts
-npm install --save-dev hardhat
-npx hardhat compile
-```
-
-Your contract should compile with the message 
-
-`Compiled 1 Solidity file successfully`
-
-As at this month, hardhat waffle has been depreciated, replace that in your hardhatconfig.js file with chai matchers.
-
-Deploy the contract to the network by creating a deploy.js file in the scripts directory
-
-```javascript
-const hre = require('hardhat');
-
-async function main() {
-  const ToucanProtocol = await hre.ethers.getContractFactory('ToucanProtocol');
-  const toucanProtocol = await ToucanProtocol.deploy(100, 1);
-  await toucanProtocol.deployed();
-  console.log('Toucan Wrapper address deployed to:', toucanProtocol.address);
-}
-
-main();
-```
-
-Then run this command
-
-`npx hardhat --network alfajores run scripts/deploy.js`
-
-
-After a succesful deployment, you would see the message
-
-`Toucan Protocol deployed to: 0xE5738DaDd196816365dCDc92B12E329acC9bcba4`
-
-Verify your contract on https://alfajores.celoscan.io
-
-
-
-Create a new file in the root of your project directory called .env. This file will contain your Celo network and contract information. Add the following lines to it
-
-CELO_NETWORK=https://alfajores-forno.celo-testnet.org
-
-TOUCAN_WRAPPER_ADDRESS=your-ToucanProtocolWrapper-contract-address
-
-**Using a smart contract wrapper**
-    
-Create a new file in your project directory called ToucanProtocolWrapper.js
-    
-```javascript
-const toucanProtocolABI = require("./ToucanProtocolABI.json");
-const Web3 = require("web3");
-const ethers = require("ethers");
-const { ContractKit } = require("@celo/contractkit");
-
-require("dotenv").config();
-
-async function getContract() {
-  const contractAddress = "0xE5738DaDd196816365dCDc92B12E329acC9bcba4";
-  const contractABI = toucanProtocolABI.abi;
-  let toucanContract;
-  try {
-    const { ethereum } = window;
-    console.log(ethereum.chainId);
-    if (ethereum.chainId === "0xaef3") {
-      const provider = new ethers.providers.Web3Provider(ethereum);
-      console.log("provider", provider);
-      const signer = provider.getSigner();
-      touc![](https://i.imgur.com/1s2wFIM.png)
-anContract = new ethers.Contract(
-        contractAddress,
-        contractABI,
-        signer
-      );
-    } else {
-      throw new Error("Please connect to the Alfajores network");
-    }
-  } catch (error) {
-    console.log("ERROR:", error);
-  }
-  return toucanContract;
-}
-
-async function purchaseCarbonCredits(tonnes) {
-  const contract = await getContract();
-  const creditPrice = await contract.creditPrice();
-  const purchaseAmount = tonnes * creditPrice;
-  await contract.purchaseCarbonCredits(tonnes, {
-    value: purchaseAmount,
-  });
-}
-
-async function getCarbonFootprint() {
-  const contract = await getContract();
-  const creditsPurchased = await contract.totalSupply();
-  const creditPrice = await contract.creditPrice();
-  const carbonCreditsPerTon = await contract.carbonCreditsPerTon();
-  const tonnes = creditsPurchased / carbonCreditsPerTon;
-  const purchaseAmount = tonnes * creditPrice;
-  const carbonFootprint = purchaseAmount;
-  return carbonFootprint;
-}
-
-async function getCarbonCreditsPerTon() {
-  const contract = await getContract();
-  const carbonCreditsPerTon = await contract.carbonCreditsPerTon();
-  return carbonCreditsPerTon.toNumber();
-}
-
-async function getCreditPrice() {
-  const contract = await getContract();
-  const creditPrice = await contract.creditPrice();
-  return creditPrice.toNumber();
-}
-
-
-module.exports = {
-  getContract,
-  purchaseCarbonCredits,
-  getCarbonFootprint,
-  getCarbonCreditsPerTon,
-  getCreditPrice
-};    
-```
-
-This javaScript file acts as a wrapper or mediator between the Toucan app and the Toucan smart contract on the Celo blockchain. In simpler terms, it's a bridge that helps the Toucan app talk to the Toucan smart contract. The available functions are purchasing carbon credits, getting the carbon footprint, and getting the price of carbon credits. It's up tp you to use the contractkit from Celo to communicate with the app but in this code, ethers was used.
 
 **Starting out the Front-End**
 
-Create a new component file in the react-app/components directory called CarbonCredits.tsx. The code should look like this
-    
-```typescript
-import React, { useState, useEffect } from "react";
-import {
-  purchaseCarbonCredits,
-  getCarbonFootprint,
-  getCarbonCreditsPerTon,
-  getCreditPrice,
-} from "../../../ToucanProtocolWrapper";
+Implementing Toucan Infrastructure
 
-function CarbonCredits(): JSX.Element {
-  const [carbonCreditsPerTon, setCarbonCreditsPerTon] = useState<number>(0);
-  const [creditPrice, setCreditPrice] = useState<number>(0);
-  const [carbonFootprint, setCarbonFootprint] = useState<number>(0);
-  const [purchaseAmount, setPurchaseAmount] = useState<number>(0);
+Each TCO2 is representative of a carbon offset. To read more about TCO2, check it out here https://docs.toucan.earth/toucan/dev-resources/smart-contracts/tco2. We will be creating a carbon offset marketplace that will display the first 12 TCO2s on Celo network. To get all TCO2s, all we have to do is check deployed Toucan subgraphs.
 
-  async function handlePurchase(event: React.FormEvent<HTMLFormElement>) {
-    console.log("got here");
-    event.preventDefault();
-    try {
-      await purchaseCarbonCredits(purchaseAmount);
-      console.log("here again");
-    } catch (error) {
-      console.error(error);
+So, we head over to https://docs.toucan.earth/toucan/dev-resources/other/subgraph and we see a list of all subgraphs deployed, our focus is on the one deployed on Celo. If this is your first time hearing about subgraphs you can check out the docs [here](https://thegraph.com/docs/en/network/explorer/)
+
+Here is the [subgraph on Celo network ](https://thegraph.com/hosted-service/subgraph/toucanprotocol/celo)
+
+
+From this subgraph, let's run a quick query in the Playground, 
+
+```json
+{
+  
+  tco2Tokens {
+    name
+    symbol
+    score
+    createdAt
+    creationTx
+    creator {
+      id
     }
   }
 
-  useEffect(() => {
-    async function fetchData() {
-      const creditsPerTon = await getCarbonCreditsPerTon();
-      setCarbonCreditsPerTon(creditsPerTon);
-
-      const price = await getCreditPrice();
-      setCreditPrice(price);
-
-      const carbonFootprint = await getCarbonFootprint();
-      setCarbonFootprint(carbonFootprint);
-    }
-
-    fetchData();
-  }, []);
-
-  return (
-    <div>
-      <h1>Carbon Credits</h1>
-      <form onSubmit={handlePurchase} className="mt-6">
-        <div className="mb-4">
-          <label
-            htmlFor="purchaseAmount"
-            className="block text-gray-700 font-bold mb-2"
-          >
-            Purchase Amount (tonnes)
-          </label>
-          <input
-            type="number"
-            id="purchaseAmount"
-            name="purchaseAmount"
-            min="1"
-            max="1000"
-            step="1"
-            value={purchaseAmount}
-            onChange={(event) =>
-              setPurchaseAmount(parseInt(event.target.value, 10))
-            }
-            className="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
-        <div className="flex items-center justify-between">
-          <button
-            type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-          >
-            Purchase
-          </button>
-        </div>
-      </form>
-
-      <div className="mt-4">
-        <p className="text-lg font-medium mb-2">
-          Carbon credits per ton: {carbonCreditsPerTon}
-        </p>
-        <p className="text-lg font-medium mb-2">Credit price: {creditPrice}</p>
-        <p className="text-lg font-medium mb-2">
-          Carbon footprint: {carbonFootprint}
-        </p>
-        <p className="text-lg font-medium mb-2">
-          Purchase amount: {purchaseAmount}
-        </p>
-      </div>
-    </div>
-  );
 }
+```
 
-export default CarbonCredits;
+This will give a list of all carbon offsets. This is what we need to simulate a marketplace.
 
-```   
-    
-Also update the index.tsx file in react-app/pages. Your code can look like this
+![](https://i.imgur.com/N0G6rOt.png)
+
+**Building out the frontend**
+
+In our frontend, we will be using apollo client to makes calls to our subgraphs. 
+
+Navigate to the react-app folder and run the following commands
+
+`yarn add graphql`
+`yarn add @apollo/client`
+
+Now head over to your _app.tsx and update it by importing your apollo client, this way
+
+```javascript
+import { ApolloProvider } from "@apollo/client";
+import client from "../apollo-client";
+```
+Also, wrap your layout with the client by adding this piece of code.
+
+```javascript
+ <ApolloProvider client={client}>
+          <Layout>
+            <Component {...pageProps} />
+          </Layout>
+        </ApolloProvider>
+```
+
+Still in the root folder of react-app, create a js file and name it `apollo-client.js` and the copy the following to it
+
+```javascript
+import { ApolloClient, InMemoryCache } from "@apollo/client";
+
+const client = new ApolloClient({
+  uri: "https://api.thegraph.com/subgraphs/name/toucanprotocol/celo",
+  cache: new InMemoryCache(),
+});
+
+export default client;
+```
+
+Create a component and name it CarbonOffsets.tsx, here we will be writing our query for the subgraph using apollo client
+
+Import `gql` and `useQuery`
+
+```javascript
+import { gql, useQuery } from "@apollo/client";
+```
+
+To call the query, and for the sake of this demo, we will just be querying the first 12 carbon offsets.
+
+```javascript
+const CARBON_OFFSETS = gql`
+  query CarbonOffsets {
+    tco2Tokens(first: 12) {
+      name
+      symbol
+      score
+      createdAt
+      creationTx
+      creator {
+        id
+      }
+    }
+  }
+`;
+```
+Proceeding to write an instance of the component, we can do something like 
+
+ ```javascript
+const CarbonOffsets = () => {
+  const { loading, error, data } = useQuery(CARBON_OFFSETS);
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error! {error.message}</div>;
+    //your custom code
+}
+```
+
+In the div you want to display your data, we need to do some mapping 
+
+  ```javascript
+<div className="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8 clickable-card">
+            {data.tco2Tokens.map((carbon: any) => (
+              <div
+                key={carbon.id}
+                className="group relative max-w-sm rounded overflow-hidden shadow-lg"
+              >
+                <div className="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">
+                  <img
+                    src={randomizeImage()}
+                    alt={randomizeImage()}
+                  />
+                </div>
+                <div className="mt-4 flex justify-between pl-4">
+                  <div>
+                    <h3 className="text-bg font-weight-bold text-gray-900">
+                      <Link
+                        href={`https://celoscan.io/tx/${carbon.creationTx}`}
+                      >
+                        <span aria-hidden="true" className="absolute inset-0" />
+                        Name: {carbon.name}
+                      </Link>
+                    </h3>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Symbol: {carbon.symbol}
+                    </p>
+                      <p className="mt-2 text-sm font-medium text-gray-900 pr-3">
+                    Score: {carbon.score}
+                  </p>
+                  </div>
+                </div>
+                <div className="mt-4 flex pl-4">
+                  <span className="inline-block bg-gray-200 rounded-full mt-2 px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">
+                    Created At{" "}
+                    {new Date(carbon.createdAt * 1000).toLocaleString("en-GB", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "2-digit",
+                      hour: "numeric",
+                      minute: "numeric",
+                      hour12: false,
+                    })}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+```
+
+The next step is to update the index.tsx. Your code can look like this
     
 ```typescript
 import React from "react";
-import ReactDOM from "react-dom";
-import CarbonCredits from "../components/CarbonCredits";
-
+import CarbonOffsets from "../components/CarbonOffsets";
 
 export default function Home(): JSX.Element {
   return (
     <div>
-      <CarbonCredits />
+      <CarbonOffsets />
     </div>
   );
 }
-```
 
-Our code adds a form to the `CarbonCredits` component that allows the user to enter the amount of carbon credits they wish to purchase. When the form is submitted, it calls the `handlePurchase` function which sends a transaction to the Toucan Protocol contract's `purchaseCarbonCredits` function with the appropriate amount of ether. It also displays the total carbon foot print we have on the Celo network.
-    
+```    
     
 Go ahead to run the application by running the following command in the terminal
     
 
 `npm run dev`
 
-Here is what you should expect to see with a footprint of 0 initially. In this case, there has been several purchases so the footprint is 11
-    
-![](https://i.imgur.com/vk80SPw.png)
+Here is what you should expect to see, basically a collection of carbon offsets including their names, symbol and time it was created. Clicking on it also takes you to the transaction on the Celo explorer
 
-You can proceed to test the application by entering a value in the "Purchase Amount" field and clicking the "Purchase" button. This should send a transaction to the Toucan Protocol contract and update the "Carbon Footprint" field with the calculated carbon footprint. Make sure to have funds in your Celo testnet wallet. If you don't have a Celo Wallet, you can add it to your Metamask [here](https://docs.celo.org/blog/tutorials/3-simple-steps-to-connect-your-metamask-wallet-to-celo) or add the Celo wallet plugin to your browser.
-    
+![](https://i.imgur.com/f8OXePM.png)
+
+Clicking on the first one for example, we see the transaction and can check through the logs to see more information such as vintagetokenId and tokenAddress.
+
+![](https://i.imgur.com/x731uGk.png)
+
 Congratulations you have just created a dApp using Toucan Protocol and Celo Composer. :confetti_ball: :confetti_ball: 
     
 
     
 
     
+
 
 
