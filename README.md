@@ -1,179 +1,352 @@
-<!-- TABLE OF CONTENTS -->
+**Introduction**
 
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgments">Acknowledgments</a></li>
-  </ol>
-</details>
+The Toucan Protocol is a decentralized platform that enables businesses and individuals to offset their carbon footprint by purchasing carbon credits from verified environmental projects. You can learn more about Toucan here https://toucan.earth/. In this tutorial, we will build a dApp that interacts with the Toucan Protocol's carbon credits smart contract using Celo Composer. Celo Composer is a tool that streamlines the creation and deployment of Celo blockchain applications. Our dApp can serve as an incentive and facilitate the transition to a low-carbon economy by making it easy and accessible for individuals and organizations to offset their carbon footprint through the purchase and redemption of carbon credits.
 
-<!-- ABOUT THE PROJECT -->
+**Prerequisites**
 
-## About The Project
+Before starting this tutorial, make sure you have the following installed on your machine:
 
-Celo Composer allows you to quickly build, deploy, and iterate on decentralized applications using Celo. It provides a number of frameworks, examples, and Celo specific functionality to help you get started with your next dApp.
+* Node.js
+* NPM (Node Package Manager)
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+**Creating the Project**
 
-## Built With
+Open your terminal and run the following command to create a new Celo Composer project
 
-Celo Composer is built on Celo to make it simple to build dApps using a variety of front-end frameworks.
+`npx @celo/celo-composer create `
 
-- [Celo](https://celo.org/)
-- [Solidity](https://docs.soliditylang.org/en/v0.8.15/)
-- [Next.js](https://nextjs.org/)
-- [React.js](https://reactjs.org/)
-- [Material UI](https://mui.com/)
-- [React Native](https://reactnative.dev/)
-- [Flutter](https://docs.flutter.dev/)
+You will be prompted to select the framework you want to work with. In this case, we are using React.
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+![](https://i.imgur.com/7qkhCW0.png)
 
-<!-- GETTING STARTED -->
+You will also be prompted to pick a web3 library for the react app. In this tutorial, rainbowkit is chosen
 
-## Getting Started
+![](https://i.imgur.com/PUVKJ6b.png)
 
-To build your dApp, you'll need to install the dependencies, create a new project, and run the following commands:
+Next up, you will be prompted to choose the smart contract framework, we will be using hardhat in this tutorial.
 
-## Prerequisites
+Finally, you will be asked if you want to create a subgraph, we don't need one so we can select no
 
-- Node
-- Git (v2.38 or higher)
 
-## How to use Celo Composer
+![](https://i.imgur.com/PZpdeEM.png)
 
-The easiest way to get started with Celo Composer is using `@celo/celo-composer`. This is a CLI tool enables you to quickly start building dApps on Celo for multiple frameworks including React, React Native (w/o Expo), Flutter and Angular. You can create the dApp using default Composer templates provided by Celo. To get started, use the following command:
+Pick your project name as well
 
-```bash
-npx @celo/celo-composer create
+![](https://i.imgur.com/HqBAp5R.png)
+
+**Writing and deploying our contract**
+
+Now that our project has been created, we need to check out the hardhat folder and navigate to contracts folder and create a new solidity file named ToucanProtocol.sol
+
+In this file, our smart contract will look like this
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract ToucanProtocol {
+    uint256 public carbonCreditsPerTon;
+    uint256 public creditPrice;
+    uint256 public totalSupply;
+
+    event CreditsPurchased(address indexed buyer, uint256 credits);
+
+    constructor(uint256 _carbonCreditsPerTon, uint256 _creditPrice) {
+        carbonCreditsPerTon = _carbonCreditsPerTon;
+        creditPrice = _creditPrice;
+    }
+
+    function setCarbonCreditsPerTon(uint256 _carbonCreditsPerTon) public {
+        carbonCreditsPerTon = _carbonCreditsPerTon;
+    }
+
+    function setCreditPrice(uint256 _creditPrice) public {
+        creditPrice = _creditPrice;
+    }
+
+    function purchaseCarbonCredits(uint256 _tonnes) public payable {
+        require(msg.value == _tonnes * creditPrice, "Incorrect payment amount");
+        uint256 credits = _tonnes * carbonCreditsPerTon;
+        uint256 newSupply = totalSupply + credits;
+        require(newSupply >= totalSupply, "Integer overflow");
+        totalSupply = newSupply;
+        emit CreditsPurchased(msg.sender, credits);
+    }
+}
+
+
 ```
 
-#### This will prompt you to select the framework and the template you want to use
+The purchaseCarbonCredits function allows users to purchase carbon credits by sending ether to the contract. The tonnes parameter specifies the number of tonnes of carbon offset that the user wants to purchase. The function is marked as payable to allow ether to be sent to the contract.
 
-![Celo Composer select framework](https://github.com/celo-org/celo-composer/blob/main/images/readme/celo-composer-create.png?raw=true)
 
-#### Once you select the framework and the template, it will ask you to select the smart contract development environment tool
 
-![Celo Composer tool selection](https://github.com/celo-org/celo-composer/blob/main/images/readme/celo-composer-tool.png?raw=true)
+Compile the contract by running the following command in the terminal
 
-#### After selecting the tool, it will ask you whether you want subgraph support for your dApp
+```bash
+cd hardhat/contracts
+npm install --save-dev hardhat
+npx hardhat compile
+```
 
-![Celo Composer subgraph support](https://github.com/celo-org/celo-composer/blob/main/images/readme/celo-composer-subgraph.png?raw=true)
+Your contract should compile with the message 
 
-#### Finally, it will ask you for the name of your dApp
+`Compiled 1 Solidity file successfully`
 
-![Celo Composer dApp name](https://github.com/celo-org/celo-composer/blob/main/images/readme/celo-composer-project-name.png?raw=true)
+As at this month, hardhat waffle has been depreciated, replace that in your hardhatconfig.js file with chai matchers.
 
-**_🔥Voila, you have your dApp ready to go. You can now start building your dApp on Celo._**
+Deploy the contract to the network by creating a deploy.js file in the scripts directory
 
-## Supported Frameworks
+```javascript
+const hre = require('hardhat');
 
-### <u>React</u>
+async function main() {
+  const ToucanProtocol = await hre.ethers.getContractFactory('ToucanProtocol');
+  const toucanProtocol = await ToucanProtocol.deploy(100, 1);
+  await toucanProtocol.deployed();
+  console.log('Toucan Wrapper address deployed to:', toucanProtocol.address);
+}
 
-- Creating examples and experiment with React for your libraries and components.
-- Install dependencies with `yarn` or `npm i`.
-- Start the dApp with `yarn react-app:dev`/`npm run react-app:dev` and you are good to go.
-- Support for Website and Progressive Web Application.
-- Works with all major crypto wallets.
+main();
+```
 
-Check here to learn more about [Celo Composer - React](https://github.com/celo-org/celo-composer/blob/main/packages/react-app/README.md)
+Then run this command
 
-### <u>React Native</u>
+`npx hardhat --network alfajores run scripts/deploy.js`
 
-- You don't need to configure anything. A reasonably good configuration of both development and production builds is handled for you so you can focus on writing code.
-- Support for Android and IOS.
-- Works with [Expo](https://expo.dev/) and without Expo.
-- Working example app - The included example app shows how this all works together.
-- Easy to use and always updated with latest dependencies.
 
-Check here to learn more about [Celo Composer - React Native](https://github.com/celo-org/celo-composer/blob/main/packages/react-native-app/README.md)
+After a succesful deployment, you would see the message
 
-### <u>Flutter</u>
+`Toucan Protocol deployed to: 0xE5738DaDd196816365dCDc92B12E329acC9bcba4`
 
-- One command to get started - Type `flutter run` to start development in your mobile phone.
-- Works with all major mobile crypto wallets.
-- Support for Android, IOS (Web, Windows, and Linux coming soon).
-- Working example app - The included example app shows how this all works together.
-- Easy to use and always updated with latest dependencies.
+Verify your contract on https://alfajores.celoscan.io
 
-Check here to learn more about [Celo Composer - Flutter](https://github.com/celo-org/celo-composer/blob/main/packages/flutter-app/README.md)
 
-### <u>Angular</u>
 
-- Creating examples and experiment with Angular for your libraries and components.
-- Easy to setup and use.
+Create a new file in the root of your project directory called .env. This file will contain your Celo network and contract information. Add the following lines to it
 
-Check here to learn more about [Celo Composer - Angular](https://github.com/celo-org/celo-composer/blob/main/packages/angular-app/README.md)
+CELO_NETWORK=https://alfajores-forno.celo-testnet.org
 
-<!-- USAGE EXAMPLES -->
+TOUCAN_WRAPPER_ADDRESS=your-ToucanProtocolWrapper-contract-address
 
-## 🔭 Learning Solidity
+**Using a smart contract wrapper**
+    
+Create a new file in your project directory called ToucanProtocolWrapper.js
+    
+```javascript
+const toucanProtocolABI = require("./ToucanProtocolABI.json");
+const Web3 = require("web3");
+const ethers = require("ethers");
+const { ContractKit } = require("@celo/contractkit");
 
-📕 Read the docs: <https://docs.soliditylang.org>
+require("dotenv").config();
 
-- [Primitive Data Types](https://solidity-by-example.org/primitives/)
-- [Mappings](https://solidity-by-example.org/mapping/)
-- [Structs](https://solidity-by-example.org/structs/)
-- [Modifiers](https://solidity-by-example.org/function-modifier/)
-- [Events](https://solidity-by-example.org/events/)
-- [Inheritance](https://solidity-by-example.org/inheritance/)
-- [Payable](https://solidity-by-example.org/payable/)
-- [Fallback](https://solidity-by-example.org/fallback/)
+async function getContract() {
+  const contractAddress = "0xE5738DaDd196816365dCDc92B12E329acC9bcba4";
+  const contractABI = toucanProtocolABI.abi;
+  let toucanContract;
+  try {
+    const { ethereum } = window;
+    console.log(ethereum.chainId);
+    if (ethereum.chainId === "0xaef3") {
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      console.log("provider", provider);
+      const signer = provider.getSigner();
+      touc![](https://i.imgur.com/1s2wFIM.png)
+anContract = new ethers.Contract(
+        contractAddress,
+        contractABI,
+        signer
+      );
+    } else {
+      throw new Error("Please connect to the Alfajores network");
+    }
+  } catch (error) {
+    console.log("ERROR:", error);
+  }
+  return toucanContract;
+}
 
-📧 Learn the [Solidity globals and units](https://solidity.readthedocs.io/en/v0.6.6/units-and-global-variables.html)
+async function purchaseCarbonCredits(tonnes) {
+  const contract = await getContract();
+  const creditPrice = await contract.creditPrice();
+  const purchaseAmount = tonnes * creditPrice;
+  await contract.purchaseCarbonCredits(tonnes, {
+    value: purchaseAmount,
+  });
+}
 
-## Support
+async function getCarbonFootprint() {
+  const contract = await getContract();
+  const creditsPurchased = await contract.totalSupply();
+  const creditPrice = await contract.creditPrice();
+  const carbonCreditsPerTon = await contract.carbonCreditsPerTon();
+  const tonnes = creditsPurchased / carbonCreditsPerTon;
+  const purchaseAmount = tonnes * creditPrice;
+  const carbonFootprint = purchaseAmount;
+  return carbonFootprint;
+}
 
-Join the Celo Discord server at <https://chat.celo.org>. Reach out on the dedicated repo channel [here](https://discord.com/channels/600834479145353243/941003424298856448).
+async function getCarbonCreditsPerTon() {
+  const contract = await getContract();
+  const carbonCreditsPerTon = await contract.carbonCreditsPerTon();
+  return carbonCreditsPerTon.toNumber();
+}
 
-<!-- ROADMAP -->
+async function getCreditPrice() {
+  const contract = await getContract();
+  const creditPrice = await contract.creditPrice();
+  return creditPrice.toNumber();
+}
 
-## Roadmap
 
-See the [open issues](https://github.com/celo-org/celo-composer/issues) for a full list of proposed features (and known issues).
+module.exports = {
+  getContract,
+  purchaseCarbonCredits,
+  getCarbonFootprint,
+  getCarbonCreditsPerTon,
+  getCreditPrice
+};    
+```
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+This javaScript file acts as a wrapper or mediator between the Toucan app and the Toucan smart contract on the Celo blockchain. In simpler terms, it's a bridge that helps the Toucan app talk to the Toucan smart contract. The available functions are purchasing carbon credits, getting the carbon footprint, and getting the price of carbon credits. It's up tp you to use the contractkit from Celo to communicate with the app but in this code, ethers was used.
 
-<!-- CONTRIBUTING -->
+**Starting out the Front-End**
 
-## Contributing
+Create a new component file in the react-app/components directory called CarbonCredits.tsx. The code should look like this
+    
+```typescript
+import React, { useState, useEffect } from "react";
+import {
+  purchaseCarbonCredits,
+  getCarbonFootprint,
+  getCarbonCreditsPerTon,
+  getCreditPrice,
+} from "../../../ToucanProtocolWrapper";
 
-As a contributor, you can add your own dApp to this repository and include it as a tab for others to access. Follow the steps below and reference existing files for additional details to help you get started.
+function CarbonCredits(): JSX.Element {
+  const [carbonCreditsPerTon, setCarbonCreditsPerTon] = useState<number>(0);
+  const [creditPrice, setCreditPrice] = useState<number>(0);
+  const [carbonFootprint, setCarbonFootprint] = useState<number>(0);
+  const [purchaseAmount, setPurchaseAmount] = useState<number>(0);
 
-If you decide to try this out and find something confusing, consider opening an pull request to make things more clear for the next developer that comes through. If you improve the user interface or create new components that you think might be useful for other developers, consider opening a PR.
+  async function handlePurchase(event: React.FormEvent<HTMLFormElement>) {
+    console.log("got here");
+    event.preventDefault();
+    try {
+      await purchaseCarbonCredits(purchaseAmount);
+      console.log("here again");
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
-We will happily compensate you for contributions. Anywhere between 5 and 50 cUSD (or more) depending on the work. This is dependent on the work that is done and is ultimately up to the discretion of the Celo Foundation developer relations team.
+  useEffect(() => {
+    async function fetchData() {
+      const creditsPerTon = await getCarbonCreditsPerTon();
+      setCarbonCreditsPerTon(creditsPerTon);
 
-You can view the associated bounty on Gitcoin [here](https://gitcoin.co/issue/celo-org/celo-progressive-dapp-starter/17/100028587).
+      const price = await getCreditPrice();
+      setCreditPrice(price);
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+      const carbonFootprint = await getCarbonFootprint();
+      setCarbonFootprint(carbonFootprint);
+    }
 
-## License
+    fetchData();
+  }, []);
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+  return (
+    <div>
+      <h1>Carbon Credits</h1>
+      <form onSubmit={handlePurchase} className="mt-6">
+        <div className="mb-4">
+          <label
+            htmlFor="purchaseAmount"
+            className="block text-gray-700 font-bold mb-2"
+          >
+            Purchase Amount (tonnes)
+          </label>
+          <input
+            type="number"
+            id="purchaseAmount"
+            name="purchaseAmount"
+            min="1"
+            max="1000"
+            step="1"
+            value={purchaseAmount}
+            onChange={(event) =>
+              setPurchaseAmount(parseInt(event.target.value, 10))
+            }
+            className="appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <button
+            type="submit"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
+            Purchase
+          </button>
+        </div>
+      </form>
 
-<!-- CONTACT -->
-## Contact
+      <div className="mt-4">
+        <p className="text-lg font-medium mb-2">
+          Carbon credits per ton: {carbonCreditsPerTon}
+        </p>
+        <p className="text-lg font-medium mb-2">Credit price: {creditPrice}</p>
+        <p className="text-lg font-medium mb-2">
+          Carbon footprint: {carbonFootprint}
+        </p>
+        <p className="text-lg font-medium mb-2">
+          Purchase amount: {purchaseAmount}
+        </p>
+      </div>
+    </div>
+  );
+}
 
-- [@CeloDevs](https://twitter.com/CeloDevs)
-- [Discord](https://discord.com/invite/6yWMkgM)
+export default CarbonCredits;
 
-<p align="right">(<a href="#top">back to top</a>)</p>
+```   
+    
+Also update the index.tsx file in react-app/pages. Your code can look like this
+    
+```typescript
+import React from "react";
+import ReactDOM from "react-dom";
+import CarbonCredits from "../components/CarbonCredits";
+
+
+export default function Home(): JSX.Element {
+  return (
+    <div>
+      <CarbonCredits />
+    </div>
+  );
+}
+```
+
+Our code adds a form to the `CarbonCredits` component that allows the user to enter the amount of carbon credits they wish to purchase. When the form is submitted, it calls the `handlePurchase` function which sends a transaction to the Toucan Protocol contract's `purchaseCarbonCredits` function with the appropriate amount of ether. It also displays the total carbon foot print we have on the Celo network.
+    
+    
+Go ahead to run the application by running the following command in the terminal
+    
+
+`npm run dev`
+
+Here is what you should expect to see with a footprint of 0 initially. In this case, there has been several purchases so the footprint is 11
+    
+![](https://i.imgur.com/vk80SPw.png)
+
+You can proceed to test the application by entering a value in the "Purchase Amount" field and clicking the "Purchase" button. This should send a transaction to the Toucan Protocol contract and update the "Carbon Footprint" field with the calculated carbon footprint. Make sure to have funds in your Celo testnet wallet. If you don't have a Celo Wallet, you can add it to your Metamask [here](https://docs.celo.org/blog/tutorials/3-simple-steps-to-connect-your-metamask-wallet-to-celo) or add the Celo wallet plugin to your browser.
+    
+Congratulations you have just created a dApp using Toucan Protocol and Celo Composer. :confetti_ball: :confetti_ball: 
+    
+
+    
+
+    
+
+
