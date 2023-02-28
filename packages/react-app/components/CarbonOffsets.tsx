@@ -29,31 +29,6 @@ const CarbonOffsets = () => {
   const [neededTokenAmount, setNeededTokenAmount] = useState<ContractReceipt>();
   const [swapTokenAddress, setSwapTokenAddress] = useState<string>("");
 
-  const redeemAuto = async () => {
-    try {
-      const ethereum = window;
-      console.log("ethereum is", ethereum);
-
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      console.log("provider", provider);
-      const signer = provider.getSigner();
-      console.log("signer", signer);
-      const sdk = new ToucanClient("mumbai");
-      console.log("sdk", sdk);
-      sdk.setProvider(provider);
-      sdk.setSigner(signer);
-      const amountBN = BigNumber.from(amount);
-      console.log(amountBN);
-      const neededTokenAmount = await sdk.redeemAuto(
-        "TCO2-VCS-981-2017",
-        parseEther(amount.toString())
-      );
-      console.log(neededTokenAmount);
-      setNeededTokenAmount(neededTokenAmount);
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   const { loading, error, data } = useQuery(CARBON_OFFSETS);
   if (loading) return <div>Loading...</div>;
