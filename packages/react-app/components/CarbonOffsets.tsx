@@ -1,6 +1,12 @@
 import { gql, useQuery } from "@apollo/client";
 import Link from "next/link";
 import randomizeImage from "../utils/randomizeImage";
+import React, { useState } from "react";
+import { ToucanClient } from "toucan-sdk";
+import { BigNumber, Contract, ContractReceipt, ethers } from "ethers";
+import { useSigner } from "wagmi";
+import { parseEther } from "ethers/lib/utils.js";
+import Modal from "react-modal";
 
 const CARBON_OFFSETS = gql`
   query CarbonOffsets {
@@ -18,6 +24,37 @@ const CARBON_OFFSETS = gql`
 `;
 
 const CarbonOffsets = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [amount, setAmount] = useState<number>(0);
+  const [neededTokenAmount, setNeededTokenAmount] = useState<ContractReceipt>();
+  const [swapTokenAddress, setSwapTokenAddress] = useState<string>("");
+
+  const redeemAuto = async () => {
+    try {
+      const ethereum = window;
+      console.log("ethereum is", ethereum);
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      console.log("provider", provider);
+      const signer = provider.getSigner();
+      console.log("signer", signer);
+      const sdk = new ToucanClient("mumbai");
+      console.log("sdk", sdk);
+      sdk.setProvider(provider);
+      sdk.setSigner(signer);
+      const amountBN = BigNumber.from(amount);
+      console.log(amountBN);
+      const neededTokenAmount = await sdk.redeemAuto(
+        "TCO2-VCS-981-2017",
+        parseEther(amount.toString())
+      );
+      console.log(neededTokenAmount);
+      setNeededTokenAmount(neededTokenAmount);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const { loading, error, data } = useQuery(CARBON_OFFSETS);
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error! {error.message}</div>;
@@ -42,10 +79,7 @@ const CarbonOffsets = () => {
                 className="group relative max-w-sm rounded overflow-hidden shadow-lg"
               >
                 <div className="min-h-80 aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-md bg-gray-200 group-hover:opacity-75 lg:aspect-none lg:h-80">
-                  <img
-                    src={randomizeImage()}
-                    alt={randomizeImage()}
-                  />
+                  <img src={randomizeImage()} alt={randomizeImage()} />
                 </div>
                 <div className="mt-4 flex justify-between pl-4">
                   <div>
@@ -53,16 +87,18 @@ const CarbonOffsets = () => {
                       <Link
                         href={`https://alfajores.celoscan.io/tx/${carbon.creationTx}`}
                       >
-                        <span aria-hidden="true" className="absolute inset-0" />
-                        Name: {carbon.name}
+                      <span aria-hidden="true" className="absolute inset-0" />
+                      Name: {carbon.name}
                       </Link>
                     </h3>
                     <p className="mt-2 text-sm text-gray-500">
                       Symbol: {carbon.symbol}
                     </p>
-                      <p className="mt-2 text-sm font-medium text-gray-900 pr-3">
-                    Score: {carbon.score}
-                  </p>
+                    <p className="mt-2 text-sm font-medium text-gray-900 pr-3">
+                      Score: {carbon.score}
+                    </p>
+                     
+                     
                   </div>
                 </div>
                 <div className="mt-4 flex pl-4">
