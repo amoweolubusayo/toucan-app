@@ -18,14 +18,14 @@ const CarbonRedeem: React.FC = () => {
   const [amount, setAmount] = useState<number>(0);
   const [contractReceipt, setcontractReceipt] = useState<ContractReceipt>();
   const [swapTokenAddress, setSwapTokenAddress] = useState<string>("");
-  const [selectedToken, setSelectedToken] = useState<string>("");
+  const [selectedToken, setSelectedToken] = useState<any>("");
   const { loading, error, data } = useQuery(GET_TCOTOKENS);
 
   require("dotenv").config();
 
   const redeemAuto = async () => {
     try {
-      const ethereum : any = window;
+      const ethereum: any = window;
       console.log("ethereum is", ethereum);
 
       const provider = new ethers.providers.Web3Provider(ethereum);
@@ -87,12 +87,17 @@ const CarbonRedeem: React.FC = () => {
         Redeem
       </button>
       {contractReceipt && (
-  <div>
-    <Link href={`https://alfajores.celoscan.io/tx/${contractReceipt.transactionHash}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 underline">
-    View transaction details {contractReceipt.contractAddress}
-    </Link>
-  </div>
-)}
+        <div>
+          <Link
+            href={`https://alfajores.celoscan.io/tx/${contractReceipt.transactionHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-500 hover:text-blue-700 underline"
+          >
+            View transaction details {contractReceipt.contractAddress}
+          </Link>
+        </div>
+      )}
     </div>
   );
 };
