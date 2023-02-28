@@ -25,10 +25,10 @@ const CarbonRedeem: React.FC = () => {
 
   const redeemAuto = async () => {
     try {
-      const ethereum: any = window;
+      const ethereum  = window;
       console.log("ethereum is", ethereum);
 
-      const provider = new ethers.providers.Web3Provider(ethereum);
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
       console.log("provider", provider);
       const signer = provider.getSigner();
       console.log("signer", signer);
@@ -49,7 +49,7 @@ const CarbonRedeem: React.FC = () => {
     }
   };
 
-  const handleTokenSelect = (event: any) => {
+  const handleTokenSelect = (event:any) => {
     setSelectedToken(event.target.value);
   };
 
@@ -87,17 +87,12 @@ const CarbonRedeem: React.FC = () => {
         Redeem
       </button>
       {contractReceipt && (
-        <div>
-          <Link
-            href={`https://alfajores.celoscan.io/tx/${contractReceipt.transactionHash}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 hover:text-blue-700 underline"
-          >
-            View transaction details {contractReceipt.contractAddress}
-          </Link>
-        </div>
-      )}
+  <div>
+    <Link href={`https://alfajores.celoscan.io/tx/${contractReceipt.transactionHash}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 underline">
+    View transaction details {contractReceipt.contractAddress}
+    </Link>
+  </div>
+)}
     </div>
   );
 };
