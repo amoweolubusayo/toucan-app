@@ -41,7 +41,7 @@ Each TCO2 is representative of a carbon offset. To read more about TCO2, check i
 
 So, we head over to https://docs.toucan.earth/toucan/dev-resources/other/subgraph and we see a list of all subgraphs deployed, our focus is on the one deployed on Celo. If this is your first time hearing about subgraphs you can check out the docs [here](https://thegraph.com/docs/en/network/explorer/)
 
-Here is the [subgraph on Celo network ](https://thegraph.com/hosted-service/subgraph/toucanprotocol/celo)
+Here is the [subgraph on Celo testnet network ](https://thegraph.com/hosted-service/subgraph/toucanprotocol/alfajores)
 
 From this subgraph, let's run a quick query in the Playground,
 
@@ -81,7 +81,7 @@ Still in the root folder of react-app, create a js file and name it `apollo-clie
 import { ApolloClient, InMemoryCache } from "@apollo/client";
 
 const client = new ApolloClient({
-  uri: "https://api.thegraph.com/subgraphs/name/toucanprotocol/celo",
+  uri: "https://api.thegraph.com/subgraphs/name/toucanprotocol/alfajores",
   cache: new InMemoryCache(),
 });
 

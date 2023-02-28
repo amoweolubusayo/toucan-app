@@ -51,7 +51,7 @@ const CarbonOffsets = () => {
                   <div>
                     <h3 className="text-bg font-weight-bold text-gray-900">
                       <Link
-                        href={`https://celoscan.io/tx/${carbon.creationTx}`}
+                        href={`https://alfajores.celoscan.io/tx/${carbon.creationTx}`}
                       >
                         <span aria-hidden="true" className="absolute inset-0" />
                         Name: {carbon.name}
