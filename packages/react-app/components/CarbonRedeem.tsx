@@ -3,7 +3,6 @@ import Link from "next/link";
 import { gql, useQuery } from "@apollo/client";
 import { ToucanClient } from "toucan-sdk";
 import { BigNumber, Contract, ContractReceipt, ethers } from "ethers";
-import { useSigner } from "wagmi";
 import { parseEther } from "ethers/lib/utils.js";
 
 const GET_TCOTOKENS = gql`
@@ -17,7 +16,6 @@ const GET_TCOTOKENS = gql`
 const CarbonRedeem: React.FC = () => {
   const [amount, setAmount] = useState<number>(0);
   const [contractReceipt, setcontractReceipt] = useState<ContractReceipt>();
-  const [swapTokenAddress, setSwapTokenAddress] = useState<string>("");
   const [selectedToken, setSelectedToken] = useState<any>("");
   const { loading, error, data } = useQuery(GET_TCOTOKENS);
 
@@ -25,25 +23,26 @@ const CarbonRedeem: React.FC = () => {
 
   const redeemAuto = async () => {
     try {
-      const ethereum  = window;
-      console.log("ethereum is", ethereum);
-
+      const ethereum: any = window;
+      if (typeof window.ethereum !== 'undefined') {
       const provider = new ethers.providers.Web3Provider(window.ethereum);
-      console.log("provider", provider);
       const signer = provider.getSigner();
       console.log("signer", signer);
       const sdk = new ToucanClient("mumbai");
-      console.log("sdk", sdk);
       sdk.setProvider(provider);
       sdk.setSigner(signer);
       const amountBN = BigNumber.from(amount);
-      console.log(amountBN);
       const contractReceipt = await sdk.redeemAuto(
         selectedToken,
         parseEther(amount.toString())
       );
       console.log(contractReceipt);
       setcontractReceipt(contractReceipt);
+      }
+      else {
+        // `window.ethereum` is not available, so the user may not have a web3-enabled browser
+        console.error('Please install MetaMask or another web3-enabled browser extension');
+      }
     } catch (error) {
       console.error(error);
     }

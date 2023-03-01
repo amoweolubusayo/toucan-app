@@ -1,12 +1,7 @@
 import { gql, useQuery } from "@apollo/client";
 import Link from "next/link";
 import randomizeImage from "../utils/randomizeImage";
-import React, { useState } from "react";
-import { ToucanClient } from "toucan-sdk";
-import { BigNumber, Contract, ContractReceipt, ethers } from "ethers";
-import { useSigner } from "wagmi";
-import { parseEther } from "ethers/lib/utils.js";
-import Modal from "react-modal";
+
 
 const CARBON_OFFSETS = gql`
   query CarbonOffsets {
@@ -24,12 +19,6 @@ const CARBON_OFFSETS = gql`
 `;
 
 const CarbonOffsets = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [amount, setAmount] = useState<number>(0);
-  const [neededTokenAmount, setNeededTokenAmount] = useState<ContractReceipt>();
-  const [swapTokenAddress, setSwapTokenAddress] = useState<string>("");
-
-
   const { loading, error, data } = useQuery(CARBON_OFFSETS);
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error! {error.message}</div>;
